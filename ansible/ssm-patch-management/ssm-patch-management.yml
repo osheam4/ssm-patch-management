@@ -7,3 +7,29 @@
 
 - debug: msg='{{ item['zone_id'] }}'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
+
+# 
+- name: Create a once off unique identifier - for bucket names
+  vars:
+    uniqueidentifier: '{{ ansible_date_time.epoch }}'
+
+- debug: msg='{{ uniqueidentifier }}'
+
+  # aws_ssm_parameter_store:
+  #   region: '{{ aws_region }}'
+  #   name: '{{ project }}-uniqueidentifier'
+  #   value: "{{ uniqueidentifier }}"
+  #   overwrite_value: never
+
+# - name: Create S3 Logs Bucket
+#   cloudformation:
+#     stack_name: '{{ project }}-s3-logs-bucket'
+#     state: present
+#     region: '{{ aws_region }}'
+#     template: '../cloudformation/{{ project }}/40_data/s3LogsBucket.yaml'
+#     tags:
+#       Component: 'SSM Patching S3 Logs'
+#       Project: '{{ project }}'
+#     template_parameters:
+#       ProjectLower: '{{ project | lower }}'
+#       UniqueIdentifier: 
