@@ -12,8 +12,7 @@
 - name: Create a once off unique identifier - for bucket names
   vars:
     uniqueidentifier: '{{ ansible_date_time.epoch }}'
-
-- debug: msg='{{ uniqueidentifier }}'
+  debug: msg='{{ uniqueidentifier }}'
 
   # aws_ssm_parameter_store:
   #   region: '{{ aws_region }}'
