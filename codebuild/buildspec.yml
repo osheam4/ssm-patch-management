@@ -1,0 +1,22 @@
+version: 0.2
+
+env:
+  variables:
+    PROJECT: ssm-patch-management
+    REGION: eu-west-1
+
+phases:
+  install:
+    commands:
+      - echo checking virtualenv
+      - virtualenv .ansible
+      - echo "pip install requirements"
+      - pip install -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo "VARS section here"
+
+  build:
+    commands:
+      - source .ansible/bin/activate . && ansible-playbook --extra-vars "project=${PROJECT} aws_region=${REGION}" ansible/playbook.yml

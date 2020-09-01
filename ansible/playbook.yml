@@ -1,0 +1,14 @@
+---
+- name: CloudFormation deployment playbook
+  hosts: localhost
+  tasks:
+    - stat:
+        path: 'vars/common.yml'
+      register: common_vars_file
+    - name: Include common vars
+      include_vars:
+        file: 'vars/common.yml'
+        name: common_vars
+      when: common_vars_file.stat.exists
+
+    - include_tasks: '{{ project }}/{{ project }}.yml'
