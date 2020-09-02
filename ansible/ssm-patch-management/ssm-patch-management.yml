@@ -14,7 +14,7 @@
     uniqueidentifier: '{{ ansible_date_time.epoch }}'
   aws_ssm_parameter_store:
     region: '{{ aws_region }}'
-    name: '{{ project }}-uniqueidentifier'
+    name: 'timestamp-{{ project }}-uniqueidentifier'
     value: "{{ uniqueidentifier }}"
     overwrite_value: never
 
