@@ -5,7 +5,7 @@
         region-name: '{{ aws_region }}'
   register: aws_region_facts
 
-- debug: msg='{{ item['zone_id'] }}'
+- debug: msg='{{ item['zone_name'] }}'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
 
 # 
