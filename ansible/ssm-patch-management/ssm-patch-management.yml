@@ -18,15 +18,14 @@
     value: "{{ uniqueidentifier }}"
     overwrite_value: never
 
-# - name: Create S3 Logs Bucket
-#   cloudformation:
-#     stack_name: '{{ project }}-s3-logs-bucket'
-#     state: present
-#     region: '{{ aws_region }}'
-#     template: '../cloudformation/{{ project }}/40_data/s3LogsBucket.yaml'
-#     tags:
-#       Component: 'SSM Patching S3 Logs'
-#       Project: '{{ project }}'
-#     template_parameters:
-#       ProjectLower: '{{ project | lower }}'
-#       UniqueIdentifier: 
+- name: Create S3 Logs Bucket
+  cloudformation:
+    stack_name: '{{ project }}-s3-logs-bucket'
+    state: present
+    region: '{{ aws_region }}'
+    template: '../cloudformation/{{ project }}/40_data/s3LogsBucket.yaml'
+    tags:
+      Component: 'SSM Patching S3 Logs'
+      Project: '{{ project }}'
+    template_parameters:
+      BucketName: '{{ project | lower }}-{{ uniqueidentifier }}-logs'

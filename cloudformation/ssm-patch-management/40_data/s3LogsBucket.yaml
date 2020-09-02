@@ -3,9 +3,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: S3 Stack
 
 Parameters:
-  ProjectLower:
-    Type: String
-  UniqueIdentifier:
+  BucketName:
     Type: String
 
 Resources:
@@ -13,11 +11,7 @@ Resources:
   PatchTaskLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Join
-        - '-'
-        - - !Sub '${ProjectLower}'
-          - !Sub '${UniqueIdentifier}'
-          - 'logs'
+      BucketName: !Ref BucketName
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
