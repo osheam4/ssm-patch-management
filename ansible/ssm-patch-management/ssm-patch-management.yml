@@ -18,6 +18,10 @@
     value: "{{ uniqueidentifier }}"
     overwrite_value: never
 
+- name: lookup the unique key from ssm
+  set_fact:
+    uniqueidentifier: "{{ lookup('aws_ssm', 'timestamp-{{ project }}-uniqueidentifier') }}"
+
 - name: Create S3 Logs Bucket
   cloudformation:
     stack_name: '{{ project }}-s3-logs-bucket'
