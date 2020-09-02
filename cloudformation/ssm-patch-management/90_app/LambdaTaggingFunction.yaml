@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda Function to tag EC2 instances based on AvailabilityZone
+
+Parameters:
+  Project:
+    Type: String
+
+Resources:
+  TaggingLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${Project}-TAGGING-LAMBDA-ROLE'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: TagInstances
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:CreateTags"
+                  - "ec2:DescribeTags"
+                  - "ec2:DescribeInstances"
+                Resource: "*"
+        - PolicyName: LogsAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
+
+  LambdaTaggingFunction:
+      Type: 'AWS::Lambda::Function'
+      Properties:
+        FunctionName: !Sub '${Project}-TAGGING-LAMBDA'
+        Description: Lambda function to tag instances for patching
+        Handler: 'index.lambda_handler'
+        Role: !GetAtt TaggingLambdaRole.Arn
+        Code:
+          ZipFile: |
+            import boto3
+            import datetime
+
+
+            date_filter = (datetime.datetime.now() - datetime.timedelta(days=7))
+
+            def lambda_handler(event, context):
+              ec2 = boto3.resource('ec2')
+
+              # Get running instances
+              instances = ec2.instances.filter(Filters=[
+                {'Name': 'instance-state-name', 'Values': ['running']}
+                ])
+
+              # Convert object to list
+              instances = [_ for _ in instances if _.platform != 'windows']
+
+              for instance in instances:
+                if instance.launch_time.date() <= date_filter.date():
+                  instanceid = instance.id
+                  instancelaunchtime = instance.launch_time
+                  instanceAZ = instance.placement['AvailabilityZone']
+                  tagValue = f'PatchMntWindow-AZ-{instanceAZ}'
+                  instance.create_tags(Tags=[{'Key': 'Patch Group', 'Value': tagValue}])
+                  tags = {tag['Key']:tag['Value']  for tag in instance.tags}
+                  if not 'ssm:patchcycle:enabled' in tags.keys():
+                    instance.create_tags(Tags=[{'Key': 'ssm:patchcycle:enabled', 'Value': 'true'}])
+                  print(instanceid)
+
+            if __name__ == "__main__":
+              lambda_handler(event, None)
+
+        Runtime: python3.7
+        MemorySize: 128
+        Timeout: 300
+
+
+
+  TaggingLambdaRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "ScheduledRule"
+      ScheduleExpression: "cron(0 4 * * ? *)"
+      State: "ENABLED"
+      Targets: 
+        - Arn: !GetAtt LambdaTaggingFunction.Arn
+          Id: TaggingLambdaRule
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref LambdaTaggingFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt TaggingLambdaRule.Arn
