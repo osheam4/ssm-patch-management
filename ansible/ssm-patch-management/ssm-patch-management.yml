@@ -8,7 +8,7 @@
 - debug: msg='{{ item['zone_name'] }}'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
 
-# 
+# SSM parameters cant begin with ssm or aws....... so i appended the word timestamp.
 - name: Create a once off unique identifier - for bucket names
   vars:
     uniqueidentifier: '{{ ansible_date_time.epoch }}'
@@ -33,3 +33,17 @@
       Project: '{{ project }}'
     template_parameters:
       BucketName: '{{ project | lower }}-{{ uniqueidentifier }}-logs'
+
+- name: Create Lambda Function for tagging instances
+  cloudformation:
+    stack_name: '{{ project }}-LambdaTaggingFunction'
+    state: present
+    region: '{{ aws_region }}'
+    template: '../cloudformation/{{ project }}/90_app/LambdaTaggingFunction.yaml'
+    tags:
+      Component: 'SSM PatchingTask'
+      Project: '{{ project }}'
+    template_parameters:
+      Project: '{{ project }}'
+
+
