@@ -93,7 +93,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties: 
       Description: "ScheduledRule"
-      ScheduleExpression: "cron(0 4 * * ? *)"
+      ScheduleExpression: "cron(0 9 * * ? *)"
       State: "ENABLED"
       Targets: 
         - Arn: !GetAtt LambdaTaggingFunction.Arn
