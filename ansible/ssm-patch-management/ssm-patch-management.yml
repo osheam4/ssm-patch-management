@@ -46,12 +46,18 @@
     template_parameters:
       Project: '{{ project }}'
 
-- name: Get list of AZs in region
-  aws_az_info:
-    filters:
-      region-name: '{{ aws_region }}'
-  register: aws_region_facts
-
-- debug: msg='{{ item['zone_id'] }}'
+- name: Create SSM Maintenance group and tasks
+  cloudformation:
+    stack_name: '{{ project }}-MaintenanceWindows-{{ item['zone_name'] }}'
+    state: present
+    region: '{{ aws_region }}'
+    template: '../cloudformation/{{ project }}/90_app/SSMMaintenanceWindows.yaml'
+    tags:
+      Component: 'SSM PatchingTask'
+      Project: '{{ project }}'
+    template_parameters:
+      ProjectLower: '{{ project | lower }}'
+      AvailabilityZone: '{{ item['zone_name'] }}'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
+
 

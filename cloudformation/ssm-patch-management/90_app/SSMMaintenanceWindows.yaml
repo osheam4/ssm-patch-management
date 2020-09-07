@@ -1,0 +1,22 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Maintenance Window Stack
+
+Parameters:
+  ProjectLower:
+    Type: String
+  AvailabilityZone:
+    Type: String
+
+Resources:
+  # Bucket for load balancer logs
+  SSMMaintenanceWindow:
+    Type: AWS::SSM::MaintenanceWindow
+    Properties:
+      AllowUnassociatedTargets: false
+      Cutoff: 1
+      Description: !Sub 'Maintenance Window to Patch Availability Zone ${AvailabilityZone}'
+      Duration: 2
+      Name: !Sub 'PatchMntWindow-${AvailabilityZone}'
+      Schedule: cron(0 0 6 ? * MON *)
+      ScheduleTimezone: Europe/Dublin
