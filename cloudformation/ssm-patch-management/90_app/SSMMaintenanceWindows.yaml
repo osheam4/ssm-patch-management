@@ -20,3 +20,19 @@ Resources:
       Name: !Sub 'PatchMntWindow-${AvailabilityZone}'
       Schedule: cron(0 0 6 ? * MON *)
       ScheduleTimezone: Europe/Dublin
+
+  MaintenanceWindowTarget:
+    Type: AWS::SSM::MaintenanceWindowTarget
+    Properties:
+      WindowId: !Ref SSMMaintenanceWindow
+      ResourceType: INSTANCE
+      Targets:
+      - Key: tag:Patch Group
+        Values:
+        - !Sub 'PatchMntWindow-AZ-${AvailabilityZone}'
+      - Key: tag:ssm:patchcycle:enabled
+        Values:
+        - True
+      Name: PatchingTarget
+      Description: !Sub 'Patch Manager Maintenance Window target ${AvailabilityZone}'
+    DependsOn: SSMMaintenanceWindow
