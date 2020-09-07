@@ -56,6 +56,7 @@ Resources:
 
 
             date_filter = (datetime.datetime.now() - datetime.timedelta(days=7))
+            print('Starting tagging EC2 instances.')
 
             def lambda_handler(event, context):
               ec2 = boto3.resource('ec2')
@@ -67,6 +68,7 @@ Resources:
 
               # Convert object to list
               instances = [_ for _ in instances if _.platform != 'windows']
+              print(f'Full list of instances - {instances}')
 
               for instance in instances:
                 if instance.launch_time.date() <= date_filter.date():
@@ -93,7 +95,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties: 
       Description: "ScheduledRule"
-      ScheduleExpression: "cron(0 9 * * ? *)"
+      ScheduleExpression: "cron(24 19 * * ? *)"
       State: "ENABLED"
       Targets: 
         - Arn: !GetAtt LambdaTaggingFunction.Arn
