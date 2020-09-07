@@ -48,7 +48,7 @@
 
 - name: Create SSM Maintenance group and tasks
   cloudformation:
-    stack_name: '{{ project }}-MaintenanceWindows-{{ item['zone_name'] }}'
+    stack_name: "{{ project }}-MaintenanceWindows-{{ item['zone_name'] }}"
     state: present
     region: '{{ aws_region }}'
     template: '../cloudformation/{{ project }}/90_app/SSMMaintenanceWindows.yaml'
