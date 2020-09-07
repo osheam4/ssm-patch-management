@@ -68,7 +68,6 @@ Resources:
 
               # Convert object to list
               instances = [_ for _ in instances if _.platform != 'windows']
-              print(f'Full list of instances - {instances}')
 
               for instance in instances:
                 if instance.launch_time.date() <= date_filter.date():
@@ -95,7 +94,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties: 
       Description: "ScheduledRule"
-      ScheduleExpression: "cron(24 19 * * ? *)"
+      ScheduleExpression: "cron(0 4 * * ? *)"
       State: "ENABLED"
       Targets: 
         - Arn: !GetAtt LambdaTaggingFunction.Arn

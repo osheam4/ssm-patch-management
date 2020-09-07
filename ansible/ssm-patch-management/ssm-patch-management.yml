@@ -46,4 +46,12 @@
     template_parameters:
       Project: '{{ project }}'
 
+- name: Get list of AZs in region
+  aws_az_info:
+    filters:
+      region-name: '{{ aws_region }}'
+  register: aws_region_facts
+
+- debug: msg='{{ item['zone_id'] }}'
+  with_items: "{{ aws_region_facts['availability_zones'] }}"
 
