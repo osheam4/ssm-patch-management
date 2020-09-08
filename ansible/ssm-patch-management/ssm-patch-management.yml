@@ -58,6 +58,7 @@
     template_parameters:
       ProjectLower: '{{ project | lower }}'
       AvailabilityZone: "{{ item['zone_name'] }}"
+      BucketName: '{{ project | lower }}-{{ uniqueidentifier }}-logs'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
 
 

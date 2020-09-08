@@ -7,9 +7,10 @@ Parameters:
     Type: String
   AvailabilityZone:
     Type: String
+  BucketName:
+    Type: String
 
 Resources:
-  # Bucket for load balancer logs
   SSMMaintenanceWindow:
     Type: AWS::SSM::MaintenanceWindow
     Properties:
@@ -36,3 +37,96 @@ Resources:
       Name: PatchingTarget
       Description: !Sub 'Patch Manager Maintenance Window target ${AvailabilityZone}'
     DependsOn: SSMMaintenanceWindow
+
+  PatchingAmazonLinuxBaseline:
+    Type: AWS::SSM::PatchBaseline
+    Properties:
+      Name: !Sub 'PatchingAmazonLinuxBaseline-${AvailabilityZone}'
+      Description: Baseline updates for AmazonLinux instances
+      OperatingSystem: AMAZON_LINUX
+      PatchGroups:
+      - !Sub 'PatchMntWindow-${AvailabilityZone}'
+      ApprovalRules:
+        PatchRules:
+        - PatchFilterGroup:
+            PatchFilters:
+            - Values:
+              - '*'
+              Key: PRODUCT
+            - Values:  
+              - '*'
+              Key: CLASSIFICATION
+            - Values:  
+              - '*'
+              Key: SEVERITY
+          ApproveAfterDays: 0
+          ComplianceLevel: INFORMATIONAL
+          EnableNonSecurity: True
+
+  PatchingAmazonLinux2Baseline:
+    Type: AWS::SSM::PatchBaseline
+    Properties:
+      Name: !Sub 'PatchingAmazonLinux2Baseline-${AvailabilityZone}'
+      Description: Baseline updates for AmazonLinux2 instances
+      OperatingSystem: AMAZON_LINUX_2
+      PatchGroups:
+      - !Sub 'PatchMntWindow-${AvailabilityZone}'
+      ApprovalRules:
+        PatchRules:
+        - PatchFilterGroup:
+            PatchFilters:
+            - Values:
+              - '*'
+              Key: PRODUCT
+            - Values:  
+              - '*'
+              Key: CLASSIFICATION
+            - Values:  
+              - '*'
+              Key: SEVERITY
+          ApproveAfterDays: 0
+          ComplianceLevel: INFORMATIONAL
+          EnableNonSecurity: True
+
+  MNTWindowRunCommandTask:
+    Type: 'AWS::SSM::MaintenanceWindowTask'
+    Properties:
+      Name: !Sub 'InitalPatcInstallNoReboot-${AvailabilityZone}'
+      WindowId: !Ref SSMMaintenanceWindow
+      Targets:
+        - Key: WindowTargetIds
+          Values:
+            - !Ref MaintenanceWindowTarget
+      TaskArn: AWS-RunPatchBaseline
+      TaskType: RUN_COMMAND
+      MaxConcurrency: 50
+      MaxErrors: 100%
+      Priority: 10
+      TaskInvocationParameters:
+        MaintenanceWindowRunCommandParameters:
+          Parameters: {"Operation":["Install"], "RebootOption": ["NoReboot"]}
+          TimeoutSeconds: 600
+          OutputS3BucketName: !Ref BucketName
+          OutputS3KeyPrefix: !Sub 'MntWindowPatch-${AvailabilityZone}'
+
+
+  MNTWindowPatchAndReboot:
+    Type: 'AWS::SSM::MaintenanceWindowTask'
+    Properties:
+      Name: !Sub 'PatchInstallWithReboot-${AvailabilityZone}'
+      WindowId: !Ref SSMMaintenanceWindow
+      Targets:
+        - Key: WindowTargetIds
+          Values:
+            - !Ref MaintenanceWindowTarget
+      TaskArn: AWS-RunPatchBaseline
+      TaskType: RUN_COMMAND
+      MaxConcurrency: 50
+      MaxErrors: 0
+      Priority: 30
+      TaskInvocationParameters:
+        MaintenanceWindowRunCommandParameters:
+          Parameters: {"Operation":["Install"], "RebootOption": ["RebootIfNeeded"]}
+          TimeoutSeconds: 600
+          OutputS3BucketName: !Ref BucketName
+          OutputS3KeyPrefix: !Sub 'MntWindowPatchAZ-${AvailabilityZone}'
