@@ -59,7 +59,7 @@
       ProjectLower: '{{ project | lower }}'
       AvailabilityZone: "{{ item['zone_name'] }}"
       BucketName: '{{ project | lower }}-{{ uniqueidentifier }}-logs'
-      DayIndex: '{{ index_var // 7 + 2 }}'
+      DayIndex: '{{ index_var % 7 + 2}}'
   with_items: "{{ aws_region_facts['availability_zones'] }}"
   loop_control:
     index_var: index_var
